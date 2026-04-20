@@ -118,7 +118,7 @@ def build():
     img_h = Inches(4.2)
     img_x = Inches(7.3)
     img_y = Inches(1.6)
-    add_img(sl, ASSETS / "ctx_main.png", img_x, img_y, img_w, img_h)
+    add_img(sl, ASSETS / "ctx_cover.png", img_x, img_y, img_w, img_h)
     img_caption(sl, "clevertap.com 홈페이지", img_x, img_y + img_h + Inches(0.05), img_w)
 
     rect(sl, Inches(0.5), Inches(0.4), Inches(2.0), Inches(0.45), fill=C_PURPLE)
@@ -204,8 +204,8 @@ def build():
             sz=10, color=C_GRAY, align=PP_ALIGN.CENTER)
 
     # 제품 개요 이미지 — clevertap.com/product 히어로
-    add_img(sl, ASSETS/"ctx_product_overview.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product — 제품 개요",
+    add_img(sl, ASSETS/"ctx_intro.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/product — 올인원 플랫폼 개요",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [3] 소개")
 
@@ -304,9 +304,9 @@ def build():
         txt(sl, d, Inches(0.8), y+Inches(0.4), Inches(5.2), Inches(0.32),
             sz=11, color=C_GRAY)
 
-    # Analytics: "Customer Data and Analytics" 실제 제품 UI
-    add_img(sl, ASSETS/"ctx_analytics.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product — Customer Data and Analytics",
+    # Analytics: 퍼널/대시보드 실제 UI (y=1600, 더 깊은 제품 섹션)
+    add_img(sl, ASSETS/"ctx_analytics2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/customer-data-and-analytics — 분석 대시보드",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [7] 분석")
 
@@ -329,9 +329,9 @@ def build():
         txt(sl, d, x+Inches(0.15), y+Inches(0.62), Inches(2.6), Inches(1.1),
             sz=11, color=C_LIGHT_GRAY, wrap=True)
 
-    # 세그멘테이션: 실제 세그멘테이션 UI (PAST BEHAVIOR SEGMENTS 도넛 차트)
-    add_img(sl, ASSETS/"ctx_segmentation.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product/segments — 세그멘테이션 UI",
+    # 세그멘테이션: 세그멘테이션 필터/빌더 UI (y=1500)
+    add_img(sl, ASSETS/"ctx_segmentation2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/segmentation — 세그멘테이션 빌더",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [8] 세그멘테이션")
 
@@ -356,9 +356,9 @@ def build():
         txt(sl, d, x+Inches(0.18), y+Inches(0.6), Inches(2.7), Inches(0.78),
             sz=11, color=C_GRAY, wrap=True)
 
-    # 인게이지먼트: 모바일 목업 + 채널 리스트 UI
-    add_img(sl, ASSETS/"ctx_engagement.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product/omnichannel-engagement — 멀티채널",
+    # 인게이지먼트: 캠페인 실행 UI (y=1600)
+    add_img(sl, ASSETS/"ctx_engagement2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/omnichannel-engagement — 캠페인 실행 화면",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [9] 인게이지먼트")
 
@@ -381,9 +381,9 @@ def build():
         txt(sl, d, Inches(0.8), y+Inches(0.4), Inches(5.2), Inches(0.32),
             sz=11, color=C_GRAY)
 
-    # AI/ML: CleverAI Strategy Agents UI
-    add_img(sl, ASSETS/"ctx_ai.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/clevertap-ai — CleverAI™ Strategy Agents",
+    # AI/ML: CleverAI 예측 UI (y=1600, 더 깊은 AI 기능 화면)
+    add_img(sl, ASSETS/"ctx_ai2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/ai — CleverAI Decisioning Engine",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [10] AI/ML")
 
@@ -414,9 +414,9 @@ def build():
         txt(sl, l, bx+Inches(0.1), by+Inches(0.7), Inches(1.7), Inches(0.38),
             sz=11, color=C_GRAY, align=PP_ALIGN.CENTER)
 
-    # A/B Testing: product page 기능 그리드 (Customer Data & Analytics / Experimentation & Optimization)
-    add_img(sl, ASSETS/"scan_prod_2000.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product — Experimentation & Optimization",
+    # A/B Testing: A/B 테스트 설정 UI (y=700)
+    add_img(sl, ASSETS/"ctx_ab.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/ab-testing — A/B 실험 설정",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [11] A/B 테스트")
 
@@ -447,9 +447,9 @@ def build():
         txt(sl, f"{v}  {l}", x+Inches(0.1), y+Inches(0.15), Inches(2.5), Inches(0.6),
             sz=14, bold=True, color=C_GREEN)
 
-    # Fintech: clevertap.com/financial-services — KYC Completed 모바일 목업
-    add_img(sl, ASSETS/"ctx_fintech.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/financial-services — 핀테크/뱅킹 솔루션",
+    # Fintech: 핀테크 활용 사례 섹션 (y=1400, use cases)
+    add_img(sl, ASSETS/"ctx_fintech2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/solutions/fintech — 핀테크 활용 사례",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [12] 핀테크")
 
@@ -507,7 +507,7 @@ def build():
             sz=11, color=C_LIGHT_GRAY, wrap=True)
 
     rect(sl, Inches(0.6), Inches(7.1), Inches(12.0), Inches(0.3), fill=C_PURPLE_DARK)
-    txt(sl, "✅  전담 CSM 배정  |  한국어 기술 지원  |  24/7 모니터링  |  온보딩 플레이북 제공",
+    txt(sl, "전담 CSM 배정  |  한국어 기술 지원  |  24/7 모니터링  |  온보딩 플레이북 제공",
         Inches(0.8), Inches(7.15), Inches(11.8), Inches(0.25),
         sz=11, color=C_WHITE, align=PP_ALIGN.CENTER)
     print("  [14] 타임라인")
@@ -537,10 +537,10 @@ def build():
             sz=11, color=C_LIGHT_GRAY)
         rect(sl, x+Inches(0.1), Inches(3.38), Inches(3.6), Inches(0.03), fill=C_PURPLE_LIGHT)
         for j, f in enumerate(feats):
-            txt(sl, f"✓  {f}", x+Inches(0.2), Inches(3.52+j*0.55), Inches(3.4), Inches(0.45),
+            txt(sl, f"  {f}", x+Inches(0.2), Inches(3.52+j*0.55), Inches(3.4), Inches(0.45),
                 sz=12, color=C_WHITE)
 
-    txt(sl, "다음 단계:  ① POC 범위 확정  →  ② 2주 무료 파일럿  →  ③ 맞춤 견적  →  ④ 계약 및 온보딩",
+    txt(sl, "다음 단계:  1) POC 범위 확정  ->  2) 2주 무료 파일럿  ->  3) 맞춤 견적  ->  4) 계약 및 온보딩",
         Inches(0.6), Inches(7.1), Inches(12.0), Inches(0.35),
         sz=13, color=C_WHITE)
     print("  [15] 가격 정책")
