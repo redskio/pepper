@@ -32,6 +32,95 @@
 - `.png` / `.jpg` — 래스터 이미지
 - `.md` — Notion 업로드용 (Notion API 연동)
 
+## 이미지 작업 효율화 규칙 (MANDATORY)
+
+이미지 관련 작업은 반드시 **"수집 → 일괄처리 → 단일 분석"** 패턴을 따른다.
+절대로 이미지를 하나씩 반복해서 분석하지 않는다.
+
+### Case 1: 레퍼런스 이미지 검색 & 비교
+```
+[금지] 검색 → 분석 → 검색 → 분석 (반복 loop)
+[필수] 1) WebSearch 2~3회로 후보 URL 수집
+       2) Python으로 일괄 다운로드 (requests + Pillow)
+       3) 비교 그리드 이미지 1장 생성 → output/ 저장
+       4) 그리드 이미지 한번에 분석 후 최종 선택
+```
+
+Python 일괄 다운로드 + 그리드 생성 템플릿:
+```python
+import requests
+from PIL import Image
+from io import BytesIO
+
+urls = ["url1", "url2", "url3", ...]  # 수집한 URL 목록
+imgs = []
+for url in urls:
+    try:
+        r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        img = Image.open(BytesIO(r.content)).convert("RGB")
+        img.thumbnail((400, 400))
+        imgs.append(img)
+    except:
+        continue
+
+# 그리드 생성 (3열)
+cols = 3
+rows = (len(imgs) + cols - 1) // cols
+grid = Image.new("RGB", (cols * 400, rows * 400), (240, 240, 240))
+for i, img in enumerate(imgs):
+    grid.paste(img, ((i % cols) * 400, (i // cols) * 400))
+grid.save("C:/Agent/pepper/output/reference_grid.png")
+```
+
+### Case 2: 디자인 결과물 캡쳐 & 검증
+- PPTX 생성 후 슬라이드 미리보기는 python-pptx + Pillow로 직접 렌더링
+- 외부 툴 캡쳐 없이 Python 내에서 해결
+```python
+from pptx import Presentation
+from pptx.util import Inches
+# 슬라이드 썸네일은 구글 슬라이드 업로드 후 URL로 확인
+```
+
+### Case 3: 경쟁사/UI 스크린샷 비교
+```
+1) 비교할 URL 목록 확정 (검색 최소화)
+2) Bash로 Python playwright 또는 requests-html 사용해 일괄 캡쳐
+3) Pillow로 그리드 합성 → 단일 이미지 분석
+```
+
+playwright 일괄 캡쳐 템플릿:
+```python
+import asyncio
+from playwright.async_api import async_playwright
+from PIL import Image
+
+async def capture_sites(urls):
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page(viewport={"width": 1280, "height": 800})
+        paths = []
+        for i, url in enumerate(urls):
+            try:
+                await page.goto(url, timeout=15000)
+                path = f"C:/Agent/pepper/output/cap_{i}.png"
+                await page.screenshot(path=path, full_page=False)
+                paths.append(path)
+            except:
+                continue
+        await browser.close()
+        return paths
+
+urls = ["https://site1.com", "https://site2.com"]
+paths = asyncio.run(capture_sites(urls))
+
+# 그리드 합성
+imgs = [Image.open(p).resize((640, 400)) for p in paths]
+grid = Image.new("RGB", (640 * min(len(imgs), 2), 400 * ((len(imgs)+1)//2)))
+for i, img in enumerate(imgs):
+    grid.paste(img, ((i%2)*640, (i//2)*400))
+grid.save("C:/Agent/pepper/output/competitor_grid.png")
+```
+
 ## 작업 프로세스
 1. 요청 분석 → 디자인 방향 결정
 2. 컬러 팔레트 / 폰트 / 레이아웃 계획
