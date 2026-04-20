@@ -118,7 +118,7 @@ def build():
     img_h = Inches(4.2)
     img_x = Inches(7.3)
     img_y = Inches(1.6)
-    add_img(sl, ASSETS / "ctx_cover.png", img_x, img_y, img_w, img_h)
+    add_img(sl, ASSETS / "screenshot_main.png", img_x, img_y, img_w, img_h)
     img_caption(sl, "clevertap.com 홈페이지", img_x, img_y + img_h + Inches(0.05), img_w)
 
     rect(sl, Inches(0.5), Inches(0.4), Inches(2.0), Inches(0.45), fill=C_PURPLE)
@@ -204,8 +204,8 @@ def build():
             sz=10, color=C_GRAY, align=PP_ALIGN.CENTER)
 
     # 제품 개요 이미지 — clevertap.com/product 히어로
-    add_img(sl, ASSETS/"ctx_intro.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product — 올인원 플랫폼 개요",
+    add_img(sl, ASSETS/"screenshot_product_s1_y1800.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "CleverTap 4대 핵심 플랫폼 — 분석·실험·개인화·오케스트레이션",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [3] 소개")
 
@@ -231,9 +231,9 @@ def build():
             sz=11, color=C_GRAY)
 
     # 고객사 페이지 스크린샷 (clevertap.com/customers)
-    add_img(sl, ASSETS/"ctx_customers.png", Inches(7.1), Inches(1.7),
+    add_img(sl, ASSETS/"screenshot_customers_page_y300.png", Inches(7.1), Inches(1.7),
             Inches(5.7), Inches(5.2))
-    img_caption(sl, "clevertap.com/customers — 글로벌 고객사 현황",
+    img_caption(sl, "전 세계 고객사 분포 — Dream11·Kotak·7-Eleven·Levi's 등",
                 Inches(7.1), Inches(6.95), Inches(5.7))
     print("  [4] 고객사")
 
@@ -280,8 +280,8 @@ def build():
             sz=10, color=C_LIGHT_GRAY)
 
     # 아키텍처: product page 플랫폼 다이어그램
-    add_img(sl, ASSETS/"ctx_architecture.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/product — 플랫폼 아키텍처 다이어그램",
+    add_img(sl, ASSETS/"screenshot_product_s1_y1300.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "Customer Data & Analytics · Experimentation · Personalization · Orchestration",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [6] 아키텍처")
 
@@ -305,8 +305,8 @@ def build():
             sz=11, color=C_GRAY)
 
     # Analytics: 퍼널/대시보드 실제 UI (y=1600, 더 깊은 제품 섹션)
-    add_img(sl, ASSETS/"ctx_analytics2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/customer-data-and-analytics — 분석 대시보드",
+    add_img(sl, ASSETS/"screenshot_product_s1_y3000.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "CleverTap Customer Data & Analytics — 고객 프로필 기반 실시간 분석",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [7] 분석")
 
@@ -330,8 +330,8 @@ def build():
             sz=11, color=C_LIGHT_GRAY, wrap=True)
 
     # 세그멘테이션: 세그멘테이션 필터/빌더 UI (y=1500)
-    add_img(sl, ASSETS/"ctx_segmentation2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/segmentation — 세그멘테이션 빌더",
+    add_img(sl, ASSETS/"screenshot_product_s1_y2400.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "CleverTap 세그멘테이션 · 개인화 · 오케스트레이션 통합 플랫폼",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [8] 세그멘테이션")
 
@@ -357,8 +357,8 @@ def build():
             sz=11, color=C_GRAY, wrap=True)
 
     # 인게이지먼트: 캠페인 실행 UI (y=1600)
-    add_img(sl, ASSETS/"ctx_engagement2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/omnichannel-engagement — 캠페인 실행 화면",
+    add_img(sl, ASSETS/"screenshot_engagement.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/omnichannel-engagement — 멀티채널 캠페인 실행",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [9] 인게이지먼트")
 
@@ -382,8 +382,8 @@ def build():
             sz=11, color=C_GRAY)
 
     # AI/ML: CleverAI 예측 UI (y=1600, 더 깊은 AI 기능 화면)
-    add_img(sl, ASSETS/"ctx_ai2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/ai — CleverAI Decisioning Engine",
+    add_img(sl, ASSETS/"screenshot_ai_ml.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "clevertap.com/ai — CleverAI™ Decisioning Engine",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [10] AI/ML")
 
@@ -415,8 +415,8 @@ def build():
             sz=11, color=C_GRAY, align=PP_ALIGN.CENTER)
 
     # A/B Testing: A/B 테스트 설정 UI (y=700)
-    add_img(sl, ASSETS/"ctx_ab.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/ab-testing — A/B 실험 설정",
+    add_img(sl, ASSETS/"screenshot_product_s1_y3600.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "CleverTap Experimentation & Optimization — Variant A·B 트래픽 분할",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [11] A/B 테스트")
 
@@ -448,8 +448,8 @@ def build():
             sz=14, bold=True, color=C_GREEN)
 
     # Fintech: 핀테크 활용 사례 섹션 (y=1400, use cases)
-    add_img(sl, ASSETS/"ctx_fintech2.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
-    img_caption(sl, "clevertap.com/solutions/fintech — 핀테크 활용 사례",
+    add_img(sl, ASSETS/"screenshot_pricing_page_y1000.png", IMG_X, IMG_Y, IMG_MAX_W, IMG_MAX_H)
+    img_caption(sl, "Kotak·Blinkit·AJIO·Axis Bank 등 금융/커머스 글로벌 브랜드",
                 IMG_X, IMG_Y + IMG_MAX_H + Inches(0.05), IMG_MAX_W)
     print("  [12] 핀테크")
 
