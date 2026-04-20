@@ -14,6 +14,39 @@
 - Canva API / Google Slides API 연동 활용
 
 ## 핵심 도구 및 MCP / Skills
+
+### AI 이미지 생성 (MANDATORY for visual slides)
+- **gemini-imagen MCP** — Nano Banana 2 (Imagen 3) 사용. 슬라이드에 들어가는 일러스트/배경 이미지 생성 전담
+- MCP 설정: `C:\Agent\mcp_registry.yaml`의 `gemini.api_key` 참조
+- 사용 시점:
+  - 슬라이드에 컨텍스트에 맞는 이미지가 필요할 때 (레퍼런스 검색 대신 직접 생성)
+  - 배경 사진이 필요한 슬라이드 (도쿄 사진처럼 full-bleed 배경)
+  - 다이어그램/인포그래픽의 시각적 요소
+
+**이미지 생성 우선순위:**
+1. `gemini-imagen` MCP 툴 직접 호출 (최우선)
+2. MCP 실패 시 → Python `google-genai` 라이브러리 fallback
+
+**생성된 이미지 저장 경로:** `C:\Agent\pepper\output\images\`
+
+**슬라이드 타입별 이미지 활용:**
+- **커버 슬라이드**: 풀블리드 배경 이미지 생성 → PPTX 배경으로 삽입
+- **콘텐츠 슬라이드**: 우측 50% 영역에 관련 일러스트 배치
+- **다이어그램 슬라이드**: 아이콘/일러스트를 각 박스에 개별 생성
+- **인용/강조 슬라이드**: 추상적 배경 이미지로 분위기 연출
+
+**한글 텍스트 렌더링 규칙 (필수):**
+- python-pptx에서 폰트는 반드시 `맑은 고딕` 또는 `Malgun Gothic` 명시
+- 폰트 미지정 시 한글 깨짐 발생 — 절대 기본 폰트 사용 금지
+```python
+from pptx.util import Pt
+from pptx.dml.color import RGBColor
+tf = shape.text_frame
+tf.text = "한글 텍스트"
+tf.paragraphs[0].runs[0].font.name = "맑은 고딕"
+tf.paragraphs[0].runs[0].font.size = Pt(24)
+```
+
 ### PPT 제작
 - **python-pptx**: 슬라이드 자동 생성, 레이아웃/폰트/색상/이미지 완전 제어
 - **Google Slides API**: Google Slides 직접 생성 및 수정
