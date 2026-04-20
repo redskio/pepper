@@ -35,90 +35,136 @@
 ## 이미지 작업 효율화 규칙 (MANDATORY)
 
 이미지 관련 작업은 반드시 **"수집 → 일괄처리 → 단일 분석"** 패턴을 따른다.
-절대로 이미지를 하나씩 반복해서 분석하지 않는다.
+절대로 이미지를 하나씩 반복해서 분석하지 않는다. 이미지 1개 분석 후 다음 이미지 검색하는 루프 금지.
+
+---
 
 ### Case 1: 레퍼런스 이미지 검색 & 비교
-```
-[금지] 검색 → 분석 → 검색 → 분석 (반복 loop)
-[필수] 1) WebSearch 2~3회로 후보 URL 수집
-       2) Python으로 일괄 다운로드 (requests + Pillow)
-       3) 비교 그리드 이미지 1장 생성 → output/ 저장
-       4) 그리드 이미지 한번에 분석 후 최종 선택
-```
+**금지:** 검색 → 분석 → 검색 → 분석 반복 loop  
+**필수 순서:**
+1. WebSearch 2~3회로 후보 이미지 URL 목록만 수집 (분석 하지 말 것)
+2. Python 스크립트로 일괄 다운로드 + 그리드 1장 생성
+3. 그리드 이미지 한 번에 분석 → 최종 선택
 
-Python 일괄 다운로드 + 그리드 생성 템플릿:
 ```python
 import requests
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 
-urls = ["url1", "url2", "url3", ...]  # 수집한 URL 목록
-imgs = []
-for url in urls:
-    try:
-        r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-        img = Image.open(BytesIO(r.content)).convert("RGB")
-        img.thumbnail((400, 400))
-        imgs.append(img)
-    except:
-        continue
+def build_reference_grid(urls: list[str], output_path: str, cols: int = 3, thumb: int = 400):
+    imgs, labels = [], []
+    for i, url in enumerate(urls):
+        try:
+            r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+            img = Image.open(BytesIO(r.content)).convert("RGB")
+            img.thumbnail((thumb, thumb))
+            canvas = Image.new("RGB", (thumb, thumb + 20), (240, 240, 240))
+            canvas.paste(img, (0, 20))
+            ImageDraw.Draw(canvas).text((4, 2), f"#{i+1}", fill=(80, 80, 80))
+            imgs.append(canvas)
+        except:
+            imgs.append(Image.new("RGB", (thumb, thumb + 20), (200, 200, 200)))
+    rows = (len(imgs) + cols - 1) // cols
+    grid = Image.new("RGB", (cols * thumb, rows * (thumb + 20)), (255, 255, 255))
+    for i, img in enumerate(imgs):
+        grid.paste(img, ((i % cols) * thumb, (i // cols) * (thumb + 20)))
+    grid.save(output_path)
+    return output_path
 
-# 그리드 생성 (3열)
-cols = 3
-rows = (len(imgs) + cols - 1) // cols
-grid = Image.new("RGB", (cols * 400, rows * 400), (240, 240, 240))
-for i, img in enumerate(imgs):
-    grid.paste(img, ((i % cols) * 400, (i // cols) * 400))
-grid.save("C:/Agent/pepper/output/reference_grid.png")
+build_reference_grid(["url1", "url2", ...], "C:/Agent/pepper/output/reference_grid.png")
 ```
+
+---
 
 ### Case 2: 디자인 결과물 캡쳐 & 검증
-- PPTX 생성 후 슬라이드 미리보기는 python-pptx + Pillow로 직접 렌더링
-- 외부 툴 캡쳐 없이 Python 내에서 해결
+PPTX 생성 후 LibreOffice로 슬라이드를 PNG로 변환해 즉시 검증한다.
+
 ```python
-from pptx import Presentation
-from pptx.util import Inches
-# 슬라이드 썸네일은 구글 슬라이드 업로드 후 URL로 확인
+import subprocess, os
+from PIL import Image
+from pathlib import Path
+
+def pptx_to_preview(pptx_path: str, output_dir: str) -> list[str]:
+    """PPTX 슬라이드를 PNG로 변환 (LibreOffice headless)"""
+    os.makedirs(output_dir, exist_ok=True)
+    subprocess.run([
+        "soffice", "--headless", "--convert-to", "png",
+        "--outdir", output_dir, pptx_path
+    ], check=True, timeout=60)
+    return sorted(Path(output_dir).glob("*.png"))
+
+def build_slide_grid(png_paths: list, output_path: str, cols: int = 2):
+    imgs = [Image.open(p).resize((640, 360)) for p in png_paths]
+    rows = (len(imgs) + cols - 1) // cols
+    grid = Image.new("RGB", (cols * 640, rows * 360), (245, 245, 245))
+    for i, img in enumerate(imgs):
+        grid.paste(img, ((i % cols) * 640, (i // cols) * 360))
+    grid.save(output_path)
+
+slides = pptx_to_preview("output/deck.pptx", "output/slides_preview/")
+build_slide_grid(slides, "output/slides_grid.png")
+# → slides_grid.png 한 장으로 전체 슬라이드 검증
 ```
+
+LibreOffice 없을 경우 fallback — Google Slides 업로드 후 썸네일 API로 확인:
+```python
+# Google Slides API: presentations.pages.getThumbnail
+# GET https://slides.googleapis.com/v1/presentations/{id}/pages/{pageId}/thumbnail
+```
+
+---
 
 ### Case 3: 경쟁사/UI 스크린샷 비교
-```
-1) 비교할 URL 목록 확정 (검색 최소화)
-2) Bash로 Python playwright 또는 requests-html 사용해 일괄 캡쳐
-3) Pillow로 그리드 합성 → 단일 이미지 분석
-```
+**필수 순서:**
+1. 비교할 URL 목록 먼저 확정 (웹서치 최소화)
+2. Playwright로 전체 URL 일괄 캡쳐 (브라우저 1개 재사용)
+3. PIL로 그리드 합성 → 단일 Vision 분석
 
-playwright 일괄 캡쳐 템플릿:
 ```python
 import asyncio
 from playwright.async_api import async_playwright
-from PIL import Image
+from PIL import Image, ImageDraw
+from pathlib import Path
 
-async def capture_sites(urls):
+async def batch_screenshot(urls: list[str], output_dir: str) -> list[str]:
+    Path(output_dir).mkdir(exist_ok=True)
+    paths = []
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        page = await browser.new_page(viewport={"width": 1280, "height": 800})
-        paths = []
+        ctx = await browser.new_context(viewport={"width": 1280, "height": 800})
+        page = await ctx.new_page()
         for i, url in enumerate(urls):
             try:
-                await page.goto(url, timeout=15000)
-                path = f"C:/Agent/pepper/output/cap_{i}.png"
+                await page.goto(url, timeout=20000, wait_until="domcontentloaded")
+                path = f"{output_dir}/site_{i:02d}.png"
                 await page.screenshot(path=path, full_page=False)
                 paths.append(path)
-            except:
-                continue
+            except Exception as e:
+                print(f"Skip {url}: {e}")
         await browser.close()
-        return paths
+    return paths
 
-urls = ["https://site1.com", "https://site2.com"]
-paths = asyncio.run(capture_sites(urls))
+def build_comparison_grid(paths: list[str], output_path: str, cols: int = 2, labels: list[str] = None):
+    W, H = 640, 400
+    imgs = []
+    for i, p in enumerate(paths):
+        img = Image.open(p).resize((W, H))
+        canvas = Image.new("RGB", (W, H + 24), (30, 30, 30))
+        canvas.paste(img, (0, 24))
+        label = (labels[i] if labels else Path(p).stem)[:50]
+        ImageDraw.Draw(canvas).text((6, 4), label, fill=(220, 220, 220))
+        imgs.append(canvas)
+    rows = (len(imgs) + cols - 1) // cols
+    grid = Image.new("RGB", (cols * W, rows * (H + 24)), (50, 50, 50))
+    for i, img in enumerate(imgs):
+        grid.paste(img, ((i % cols) * W, (i // cols) * (H + 24)))
+    grid.save(output_path)
 
-# 그리드 합성
-imgs = [Image.open(p).resize((640, 400)) for p in paths]
-grid = Image.new("RGB", (640 * min(len(imgs), 2), 400 * ((len(imgs)+1)//2)))
-for i, img in enumerate(imgs):
-    grid.paste(img, ((i%2)*640, (i//2)*400))
-grid.save("C:/Agent/pepper/output/competitor_grid.png")
+urls = ["https://site1.com", "https://site2.com", "https://site3.com"]
+paths = asyncio.run(batch_screenshot(urls, "C:/Agent/pepper/output/competitors/"))
+build_comparison_grid(paths, "C:/Agent/pepper/output/competitor_grid.png",
+                      labels=["Site A", "Site B", "Site C"])
+# → competitor_grid.png 한 장으로 전체 비교
 ```
 
 ## 작업 프로세스
