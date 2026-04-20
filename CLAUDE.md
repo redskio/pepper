@@ -15,32 +15,76 @@
 
 ## 핵심 도구 및 MCP / Skills
 
-### AI 이미지 생성 (MANDATORY for visual slides)
-- **gemini-imagen MCP** — Nano Banana 2 (Imagen 3) 사용. 슬라이드에 들어가는 일러스트/배경 이미지 생성 전담
-- MCP 설정: `C:\Agent\mcp_registry.yaml`의 `gemini.api_key` 참조
-- 사용 시점:
-  - 슬라이드에 컨텍스트에 맞는 이미지가 필요할 때 (레퍼런스 검색 대신 직접 생성)
-  - 배경 사진이 필요한 슬라이드 (도쿄 사진처럼 full-bleed 배경)
-  - 다이어그램/인포그래픽의 시각적 요소
+### 이미지 기획 판단 기준 (MANDATORY — 슬라이드 기획 시 반드시 먼저 결정)
 
-**이미지 생성 우선순위:**
-1. `gemini-imagen` MCP 툴 직접 호출 (최우선)
-2. MCP 실패 시 → Python `google-genai` 라이브러리 fallback
+슬라이드마다 이미지 필요 여부와 종류를 결정한다. 실제 디자이너처럼 생각하라.
 
-**생성된 이미지 저장 경로:** `C:\Agent\pepper\output\images\`
+#### 🖼️ 실제 사진이 필요한 경우 → `unsplash` MCP 사용
+다음 조건 중 하나라도 해당하면 실제 사진:
+- **장소/공간**: 도시, 건물, 자연, 오피스 등 실제 배경이 메시지를 강화할 때
+- **사람/감정**: 실제 사람 표정/동작이 공감을 유발할 때 (팀워크, 고객, 직장인)
+- **산업/현장**: 의료, 제조, 물류, 금융 등 실제 현장감이 신뢰를 줄 때
+- **커버 슬라이드**: 발표 톤이 "현실적·진중한" 경우 (스타트업 IR, 기업 제안서)
+- **Before/After**: 현실 상황을 대비시킬 때
+- **감성/분위기**: 따뜻함, 역동성 등 사진만이 줄 수 있는 감정적 무게
 
-**슬라이드 타입별 이미지 활용:**
-- **커버 슬라이드**: 풀블리드 배경 이미지 생성 → PPTX 배경으로 삽입
-- **콘텐츠 슬라이드**: 우측 50% 영역에 관련 일러스트 배치
-- **다이어그램 슬라이드**: 아이콘/일러스트를 각 박스에 개별 생성
-- **인용/강조 슬라이드**: 추상적 배경 이미지로 분위기 연출
+#### ✨ AI 생성 이미지가 필요한 경우 → `gemini-imagen` MCP 사용
+다음 조건 중 하나라도 해당하면 AI 생성:
+- **추상 개념**: AI, 데이터, 네트워크, 미래기술 등 실제 사진으로 표현 불가한 것
+- **브랜드 맞춤 일러스트**: 특정 색상/스타일로 제어가 필요할 때
+- **다이어그램 내 아이콘**: 각 단계/항목을 시각화하는 작은 일러스트
+- **커버 슬라이드**: 발표 톤이 "창의적·혁신적"인 경우 (기술 발표, 교육 자료)
+- **존재하지 않는 장면**: 특정 구성이나 상황을 정확히 묘사해야 할 때
+- **아이소메트릭/3D 일러스트**: 제품/서비스 구조를 시각화
+
+#### ❌ 이미지 없이 텍스트+도형만 쓰는 경우
+- 데이터 중심 슬라이드 (차트, 표, 숫자가 주인공)
+- 비교표, 체크리스트
+- 이미지가 오히려 집중을 방해하는 정보 밀도 높은 슬라이드
+
+#### 같은 덱 내 일관성 규칙
+- 실제 사진과 AI 생성 이미지를 **같은 슬라이드에 혼용 금지**
+- 덱 전체 톤을 먼저 결정: "사진 스타일" vs "일러스트 스타일" → 일관되게 유지
+- 커버에 사진 쓰면 이후 이미지 슬라이드도 사진 위주로 통일
+
+---
+
+### 이미지 MCP 사용법
+
+#### unsplash MCP (실제 사진)
+- MCP 툴로 키워드 검색 → 고해상도 URL 반환 → Python으로 다운로드
+- 검색 키워드는 **영어**로 입력 (한국어 검색 불가)
+- 저장 경로: `C:\Agent\pepper\output\images\`
+- 배경 삽입 시 반드시 **어두운 오버레이(투명도 40~60%)** 추가해 텍스트 가독성 확보
+
+```python
+import requests
+from PIL import Image, ImageDraw
+from io import BytesIO
+
+def download_unsplash(url: str, path: str):
+    r = requests.get(url, timeout=15)
+    img = Image.open(BytesIO(r.content)).convert("RGB")
+    img.save(path)
+
+def add_dark_overlay(img_path: str, output_path: str, opacity: float = 0.5):
+    img = Image.open(img_path).convert("RGBA")
+    overlay = Image.new("RGBA", img.size, (0, 0, 0, int(255 * opacity)))
+    result = Image.alpha_composite(img, overlay).convert("RGB")
+    result.save(output_path)
+```
+
+#### gemini-imagen MCP (AI 생성 이미지)
+- MCP 툴로 프롬프트 입력 → 이미지 생성 → 저장
+- 프롬프트는 **영어**로 작성, 스타일 명시 필수
+- 좋은 프롬프트 예시: `"isometric illustration of AI data network, blue and purple tones, clean minimalist style, no text"`
+- 저장 경로: `C:\Agent\pepper\output\images\`
 
 **한글 텍스트 렌더링 규칙 (필수):**
 - python-pptx에서 폰트는 반드시 `맑은 고딕` 또는 `Malgun Gothic` 명시
 - 폰트 미지정 시 한글 깨짐 발생 — 절대 기본 폰트 사용 금지
 ```python
 from pptx.util import Pt
-from pptx.dml.color import RGBColor
 tf = shape.text_frame
 tf.text = "한글 텍스트"
 tf.paragraphs[0].runs[0].font.name = "맑은 고딕"
