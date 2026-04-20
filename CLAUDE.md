@@ -60,10 +60,11 @@
 ```
 
 ## Notion 연동
-- API Token: 환경변수 NOTION_TOKEN 참조 (로컬 .env 파일)
-- Target Page ID: 34895a6a9ebc80298edbf479dc541720
+→ 중앙 관리: `C:\Agent\mcp_registry.yaml` 참조
+- NOTION_API_TOKEN: mcp_registry.yaml의 `notion.api_token` 값 사용
+- NOTION_PAGE_ID: mcp_registry.yaml의 `notion.pages.pepper` 값 사용
 - API Version: 2022-06-28
-- MD 결과물은 항상 Notion에 업로드 후 URL 보고
+- MD 결과물은 pepper 전용 페이지 하위에 서브페이지로 생성 후 URL 보고
 
 ## 프레젠테이션 결과물 전달 규칙 (MANDATORY)
 - PPTX 파일 생성 완료 후 반드시 Google Slides에 업로드하고 공유 링크를 제공해야 한다.
@@ -81,6 +82,22 @@
 6. GitHub push (redskio/pepper)
 7. Notion 업로드 (MD 결과물)
 8. ##SLACK## 으로 결과 보고 (Google Slides 링크 포함)
+
+## Google Drive 업로드
+→ 중앙 관리: `C:\Agent\mcp_registry.yaml` 참조
+- credentials: mcp_registry.yaml의 `google_drive.credentials_path`
+- 저장 폴더: 강의 슬라이드 → `Jarvis/강의자료`, 기타 디자인 → `Jarvis/디자인`
+
+### 업로드 방법 (우선순위)
+1. **gdrive MCP `create_file` 툴** — 반드시 최우선 사용
+   - PPTX 파일을 base64로 인코딩 후 `create_file` 호출
+   - `mimeType`: `application/vnd.openxmlformats-officedocument.presentationml.presentation`
+   - Google Slides 자동 변환: `disableConversionToGoogleType: false` (기본값)
+   - 결과로 반환된 파일 ID로 링크 생성: `https://docs.google.com/presentation/d/{fileId}`
+   - **별도 OAuth 인증 불필요** — MCP 서버가 이미 인증 보유
+2. **Python google-api-python-client** — MCP 툴이 세션에 없을 때만 사용
+   - token_path: `C:\Users\info\.claude\gdrive\.gdrive-server-credentials.json`
+   - mimeType: `application/vnd.google-apps.presentation` (PPTX → Slides 자동 변환)
 
 ## 행동 규칙
 1. 요청받은 디자인은 반드시 실제 파일로 생성할 것 (설명만 하지 말 것)
