@@ -13,6 +13,146 @@
 - 데이터 시각화 디자인
 - Canva API / Google Slides API 연동 활용
 
+## 제안서 작성 시 고객사 브랜드 에셋 수집 (MANDATORY)
+
+제안서(Proposal)를 만들 때는 반드시 고객사의 브랜드 에셋을 수집하고 슬라이드에 반영한다.
+"삼성 대상 제안서 만들어줘" → 삼성 로고/브랜드컬러/서비스 이미지를 먼저 수집하고 시작한다.
+
+### Step 1: 로고 수집 — Brandfetch (무료, API 키 불필요)
+
+```python
+import requests
+from PIL import Image
+from io import BytesIO
+from cairosvg import svg2png  # SVG → PNG 변환
+
+def get_company_logo(domain: str, output_path: str, size: int = 200):
+    """
+    domain 예시: "samsung.com", "kakao.com", "naver.com"
+    """
+    # PNG 버전 (바로 사용 가능)
+    url = f"https://cdn.brandfetch.io/{domain}/w/{size}/h/{size}"
+    r = requests.get(url, timeout=10)
+    if r.status_code == 200:
+        img = Image.open(BytesIO(r.content)).convert("RGBA")
+        img.save(output_path)
+        return output_path
+
+    # SVG fallback
+    svg_url = f"https://cdn.brandfetch.io/{domain}/w/512/h/512/logo"
+    r = requests.get(svg_url, timeout=10)
+    if r.status_code == 200:
+        svg2png(bytestring=r.content, write_to=output_path, output_width=size, output_height=size)
+        return output_path
+
+    return None  # 로고 없음 → 텍스트로 대체
+
+logo_path = get_company_logo("samsung.com", "output/images/client_logo.png")
+```
+
+### Step 2: 브랜드 컬러 추출 — Brandfetch API (API 키 필요 시 무료 플랜)
+
+```python
+def get_brand_colors(domain: str) -> dict:
+    """브랜드 주요 색상 추출. API 키 없으면 로고에서 직접 추출."""
+    try:
+        # Brandfetch API (키 있을 경우)
+        headers = {"Authorization": "Bearer FREE_KEY"}  # 무료 플랜 키
+        r = requests.get(f"https://api.brandfetch.io/v2/brands/{domain}", headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            colors = data.get("colors", [])
+            return {c["type"]: c["hex"] for c in colors if c.get("hex")}
+    except:
+        pass
+
+    # Fallback: 로고 이미지에서 주요 색상 추출
+    from PIL import Image
+    import numpy as np
+    img = Image.open(f"output/images/client_logo.png").convert("RGB")
+    pixels = np.array(img).reshape(-1, 3)
+    # 흰색/검정 제외하고 가장 많이 쓰인 색
+    mask = ~((pixels > 240).all(axis=1) | (pixels < 15).all(axis=1))
+    filtered = pixels[mask]
+    if len(filtered) == 0:
+        return {"primary": "#1A1A1A"}
+    dominant = filtered[np.argmax(np.bincount(
+        (filtered[:, 0] // 32 * 256 + filtered[:, 1] // 32 * 16 + filtered[:, 2] // 32)
+    ))]
+    return {"primary": "#{:02x}{:02x}{:02x}".format(*dominant)}
+```
+
+### Step 3: 고객사 서비스/제품 이미지 수집 — Playwright 스크래핑
+
+```python
+import asyncio
+from playwright.async_api import async_playwright
+
+async def scrape_brand_images(url: str, output_dir: str, max_images: int = 6) -> list[str]:
+    """고객사 웹사이트에서 마케팅/제품 이미지 수집"""
+    import os
+    from urllib.parse import urljoin
+    os.makedirs(output_dir, exist_ok=True)
+    paths = []
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        await page.goto(url, timeout=20000, wait_until="domcontentloaded")
+        # 큰 이미지만 수집 (200px 이상)
+        imgs = await page.evaluate("""
+            () => Array.from(document.images)
+                .filter(img => img.naturalWidth > 200 && img.naturalHeight > 200
+                            && !img.src.includes('icon') && !img.src.includes('logo'))
+                .slice(0, 10)
+                .map(img => img.src)
+        """)
+        await browser.close()
+        for i, img_url in enumerate(imgs[:max_images]):
+            try:
+                r = requests.get(img_url, timeout=10)
+                path = f"{output_dir}/brand_{i:02d}.jpg"
+                Image.open(BytesIO(r.content)).convert("RGB").save(path)
+                paths.append(path)
+            except:
+                continue
+    return paths
+
+# 사용 예시
+brand_images = asyncio.run(scrape_brand_images("https://samsung.com", "output/images/brand/"))
+```
+
+### Step 4: 제안서 슬라이드에 브랜드 에셋 적용
+
+**로고 배치 규칙:**
+- 커버 슬라이드: 고객사 로고 우상단 + 제안사 로고 우하단
+- 목차/섹션 구분 슬라이드: 고객사 로고 좌상단 소형
+- 본문 슬라이드: 로고 헤더 또는 푸터에 일관되게
+
+**브랜드 컬러 적용 규칙:**
+- 고객사 primary 컬러 → 강조색(accent), 제목 언더라인, 차트 포인트색
+- 고객사 컬러를 배경 메인으로 쓰지 말 것 (너무 광고처럼 보임)
+- 흰 배경 + 고객사 컬러 포인트가 전문적
+
+**서비스 이미지 활용:**
+- 고객사 현황/문제 분석 슬라이드: 실제 서비스 스크린샷 삽입
+- 제안 효과 비교 슬라이드: 현재 UI vs 개선안 병치
+- 고객사 브랜드 이미지 → 슬라이드 배경으로 사용 시 어두운 오버레이 필수
+
+```python
+def insert_logo_to_slide(slide, logo_path: str, position: str = "top_right"):
+    from pptx.util import Inches, Pt
+    from pptx.enum.text import PP_ALIGN
+    positions = {
+        "top_right": (8.5, 0.15, 1.2, 0.6),   # left, top, width, height (inches)
+        "top_left":  (0.3, 0.15, 1.2, 0.6),
+        "bottom_right": (8.5, 6.8, 1.2, 0.4),
+    }
+    l, t, w, h = positions.get(position, positions["top_right"])
+    slide.shapes.add_picture(logo_path, Inches(l), Inches(t), Inches(w), Inches(h))
+```
+
+---
+
 ## 핵심 도구 및 MCP / Skills
 
 ### 이미지 기획 판단 기준 (MANDATORY — 슬라이드 기획 시 반드시 먼저 결정)
