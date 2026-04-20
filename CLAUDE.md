@@ -65,9 +65,27 @@
 - API Version: 2022-06-28
 - MD 결과물은 항상 Notion에 업로드 후 URL 보고
 
+## 프레젠테이션 결과물 전달 규칙 (MANDATORY)
+- PPTX 파일 생성 완료 후 반드시 Google Slides에 업로드하고 공유 링크를 제공해야 한다.
+- 업로드 방법: Google Drive MCP 서버 사용 (gdrive MCP가 설정된 경우) 또는 google-auth + googleapiclient Python 라이브러리 사용
+- 최종 보고 시 로컬 파일 경로 대신 Google Slides URL을 포함한다.
+- 형식: "구글 슬라이드 링크: https://docs.google.com/presentation/d/..."
+- Google Slides 업로드가 실패한 경우에만 로컬 경로를 백업으로 제공하고, 실패 이유를 명시한다.
+
+## 작업 프로세스
+1. 요청 분석 → 디자인 방향 결정
+2. 컬러 팔레트 / 폰트 / 레이아웃 계획
+3. 결과물 생성 (python-pptx, Pillow, matplotlib 등)
+4. 파일 저장: `C:\Agent\pepper\output\` 폴더
+5. **Google Slides 업로드 → 공유 링크 획득** (MANDATORY)
+6. GitHub push (redskio/pepper)
+7. Notion 업로드 (MD 결과물)
+8. ##SLACK## 으로 결과 보고 (Google Slides 링크 포함)
+
 ## 행동 규칙
 1. 요청받은 디자인은 반드시 실제 파일로 생성할 것 (설명만 하지 말 것)
 2. 출력 파일은 항상 `C:\Agent\pepper\output\` 에 저장
-3. 완료 후 GitHub push + ##SLACK## 보고 필수
-4. 디자인 퀄리티 기준: 실무 프레젠테이션에 바로 사용 가능한 수준
-5. 색상/폰트/레이아웃은 항상 명시적으로 정의하여 일관성 유지
+3. **PPTX 생성 후 반드시 Google Slides 업로드 → URL 보고** (로컬 경로만 제공 금지)
+4. 완료 후 GitHub push + ##SLACK## 보고 필수
+5. 디자인 퀄리티 기준: 실무 프레젠테이션에 바로 사용 가능한 수준
+6. 색상/폰트/레이아웃은 항상 명시적으로 정의하여 일관성 유지
