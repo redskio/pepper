@@ -18,71 +18,100 @@
 제안서(Proposal)를 만들 때는 반드시 고객사의 브랜드 에셋을 수집하고 슬라이드에 반영한다.
 "삼성 대상 제안서 만들어줘" → 삼성 로고/브랜드컬러/서비스 이미지를 먼저 수집하고 시작한다.
 
-### Step 1: 로고 수집 — Brandfetch (무료, API 키 불필요)
+### Step 1: 로고 + 브랜드 컬러 수집 — Playwright 직접 스크래핑
+
+API에 의존하지 않는다. Playwright로 고객사 웹사이트에 직접 접속해 로고를 가져온다.
 
 ```python
+import asyncio
 import requests
-from PIL import Image
+from playwright.async_api import async_playwright
+from PIL import Image, ImageFilter
 from io import BytesIO
-from cairosvg import svg2png  # SVG → PNG 변환
+import numpy as np
+import os
 
-def get_company_logo(domain: str, output_path: str, size: int = 200):
+async def scrape_company_logo(url: str, output_path: str) -> str | None:
     """
-    domain 예시: "samsung.com", "kakao.com", "naver.com"
+    고객사 웹사이트에서 로고 이미지를 직접 추출.
+    url 예시: "https://www.samsung.com/kr/"
     """
-    # PNG 버전 (바로 사용 가능)
-    url = f"https://cdn.brandfetch.io/{domain}/w/{size}/h/{size}"
-    r = requests.get(url, timeout=10)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        await page.goto(url, timeout=20000, wait_until="domcontentloaded")
+
+        # 로고 후보 셀렉터 (우선순위 순)
+        selectors = [
+            'header img[alt*="logo" i]',
+            'header img[src*="logo" i]',
+            'nav img[alt*="logo" i]',
+            '.logo img', '#logo img', '[class*="logo"] img',
+            'header a img:first-child',
+            'header img:first-child',
+        ]
+        logo_url = None
+        for sel in selectors:
+            el = page.locator(sel).first
+            if await el.count() > 0:
+                src = await el.get_attribute("src")
+                if src:
+                    logo_url = src if src.startswith("http") else f"{url.rstrip('/')}{src}"
+                    break
+
+        # og:image fallback (브랜드 대표 이미지)
+        if not logo_url:
+            og = await page.locator('meta[property="og:image"]').get_attribute("content")
+            logo_url = og
+
+        await browser.close()
+
+    if not logo_url:
+        return None
+
+    r = requests.get(logo_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
     if r.status_code == 200:
         img = Image.open(BytesIO(r.content)).convert("RGBA")
+        # 흰색 배경 제거 (투명도 처리)
         img.save(output_path)
         return output_path
+    return None
 
-    # SVG fallback
-    svg_url = f"https://cdn.brandfetch.io/{domain}/w/512/h/512/logo"
-    r = requests.get(svg_url, timeout=10)
-    if r.status_code == 200:
-        svg2png(bytestring=r.content, write_to=output_path, output_width=size, output_height=size)
-        return output_path
 
-    return None  # 로고 없음 → 텍스트로 대체
-
-logo_path = get_company_logo("samsung.com", "output/images/client_logo.png")
-```
-
-### Step 2: 브랜드 컬러 추출 — Brandfetch API (API 키 필요 시 무료 플랜)
-
-```python
-def get_brand_colors(domain: str) -> dict:
-    """브랜드 주요 색상 추출. API 키 없으면 로고에서 직접 추출."""
-    try:
-        # Brandfetch API (키 있을 경우)
-        headers = {"Authorization": "Bearer FREE_KEY"}  # 무료 플랜 키
-        r = requests.get(f"https://api.brandfetch.io/v2/brands/{domain}", headers=headers, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            colors = data.get("colors", [])
-            return {c["type"]: c["hex"] for c in colors if c.get("hex")}
-    except:
-        pass
-
-    # Fallback: 로고 이미지에서 주요 색상 추출
-    from PIL import Image
-    import numpy as np
-    img = Image.open(f"output/images/client_logo.png").convert("RGB")
-    pixels = np.array(img).reshape(-1, 3)
-    # 흰색/검정 제외하고 가장 많이 쓰인 색
-    mask = ~((pixels > 240).all(axis=1) | (pixels < 15).all(axis=1))
-    filtered = pixels[mask]
+def extract_brand_colors(logo_path: str) -> dict:
+    """로고에서 주요 브랜드 컬러 추출 (흰/검 제외)"""
+    img = Image.open(logo_path).convert("RGB")
+    img_small = img.resize((100, 100))
+    pixels = np.array(img_small).reshape(-1, 3)
+    # 흰색(240+), 검정(15-), 회색(채도 낮은 것) 제거
+    r, g, b = pixels[:, 0], pixels[:, 1], pixels[:, 2]
+    not_white = ~((r > 230) & (g > 230) & (b > 230))
+    not_black = ~((r < 25) & (g < 25) & (b < 25))
+    not_gray = (np.abs(r.astype(int) - g) + np.abs(g.astype(int) - b) + np.abs(r.astype(int) - b)) > 30
+    filtered = pixels[not_white & not_black & not_gray]
     if len(filtered) == 0:
-        return {"primary": "#1A1A1A"}
-    dominant = filtered[np.argmax(np.bincount(
-        (filtered[:, 0] // 32 * 256 + filtered[:, 1] // 32 * 16 + filtered[:, 2] // 32)
-    ))]
-    return {"primary": "#{:02x}{:02x}{:02x}".format(*dominant)}
+        return {"primary": "#1A73E8", "secondary": "#FFFFFF"}
+    # 가장 많이 등장하는 색 (양자화)
+    quantized = (filtered // 32) * 32
+    unique, counts = np.unique(quantized.reshape(-1, 3), axis=0, return_counts=True)
+    top = unique[np.argsort(counts)[-2:]][::-1]
+    colors = ["#{:02x}{:02x}{:02x}".format(*c) for c in top]
+    return {"primary": colors[0], "secondary": colors[1] if len(colors) > 1 else "#FFFFFF"}
+
+
+# 사용 예시
+async def collect_brand_assets(company_url: str, output_dir: str):
+    logo_path = f"{output_dir}/client_logo.png"
+    logo = await scrape_company_logo(company_url, logo_path)
+    colors = extract_brand_colors(logo_path) if logo else {"primary": "#1A1A1A"}
+    return {"logo": logo, "colors": colors}
+
+assets = asyncio.run(collect_brand_assets("https://www.samsung.com/kr/", "output/images"))
+# → assets["logo"], assets["colors"]["primary"]
 ```
 
-### Step 3: 고객사 서비스/제품 이미지 수집 — Playwright 스크래핑
+### Step 2: 고객사 서비스/제품 이미지 수집 — Playwright 스크래핑
 
 ```python
 import asyncio
