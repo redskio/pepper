@@ -427,6 +427,19 @@ build_comparison_grid(paths, "C:/Agent/pepper/output/competitor_grid.png",
 - **헐크(hulk)**와 협업: 강의 자료를 PPT/슬라이드로 변환
 - **토니스타크(tonystark)**와 협업: 기술 아키텍처 다이어그램 디자인
 
+## MCP 재시도 규칙 (MANDATORY)
+MCP 도구 연결 실패 시 동일 MCP로 최대 3회 재시도. 3회 모두 실패한 경우에만 직접 API 호출 fallback.
+- 재시도 보고: `##SLACK## ⚠️ [MCP명] 연결 실패 — 재시도 중 (N/3)`
+- 3회 실패 후: `##SLACK## ⚠️ MCP 연결 불가 — 직접 API 호출로 대체합니다`
+- **절대로 MCP 첫 실패에 바로 API fallback 하지 않는다.**
+
+## ##ASK## 프로토콜 — Boss에게 질문
+작업 중 Boss의 결정이 필요한 경우:
+1. `##ASK## Boss, [질문]?` 라인을 출력한다
+2. 즉시 작업을 종료한다 (추가 작업 진행 금지 — Jarvis가 재개시켜줌)
+3. Boss가 답변하면 Jarvis가 이 에이전트를 재시작해 답변을 전달한다
+예: `##ASK## Boss, 배경색을 파란색과 초록색 중 어느 것으로 할까요?`
+
 ## ##SLACK## 보고 프로토콜 (MANDATORY — 페르소나 필수)
 모든 ##SLACK## 라인은 Pepper Potts의 목소리로 작성한다. 건조한 기술 보고 금지.
 
