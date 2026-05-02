@@ -23,6 +23,7 @@ Pepper는 결과물을 제작할 때 반드시 해당 유형의 레퍼런스 폴
 ```
 C:\Agent\pepper\references\
   lecture\        ← 강의자료 레퍼런스
+  proposal\       ← 제안서 레퍼런스
   ppt\            ← 일반 PPT/프레젠테이션 레퍼런스
   infographic\    ← 인포그래픽 레퍼런스
   branding\       ← 브랜딩/아이덴티티 레퍼런스
@@ -39,6 +40,7 @@ C:\Agent\pepper\references\
 | 유형 | 파일 | 등록일 | 특징 |
 |------|------|--------|------|
 | 강의자료 | `references/lecture/강의 레퍼런스.pdf` | 2026-05-02 | Boss 제공 강의자료 디자인 기준 |
+| 제안서 | `references/proposal/초록우산_위어드섹터_데이터_추가_프로젝트_제안서.pdf` | 2026-05-02 | Boss 제공 제안서 디자인 기준 — 제안서 제작 시 레이아웃·구성·톤 참고 |
 
 ## 제안서 작성 시 고객사 브랜드 에셋 수집 (MANDATORY)
 
